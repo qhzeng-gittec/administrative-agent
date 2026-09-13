@@ -180,7 +180,7 @@ async def test_tool_protocol_and_successful_cross_department_requests():
 
 @pytest.mark.asyncio
 async def test_permissions_incomplete_output_and_tool_errors_are_not_success():
-    model = Model(turns=[turn(("1", "grant_access", {}), ("2", "finish_task", {"status": "completed", "missing_information": [], "explanation": "已开通"})),
+    model = Model(turns=[turn(("1", "grant_access", {}), ("2", "finish_task", {"status": "completed", "missing_information": []})),
                          turn(finish="length")])
     run = await EnterpriseAgent(model).run(dataset()[0]["task"])
     assert run["status"] == "incomplete_response"
@@ -189,25 +189,29 @@ async def test_permissions_incomplete_output_and_tool_errors_are_not_success():
 
 
 @pytest.mark.asyncio
-async def test_waiting_approval_cannot_be_reported_completed():
+async def test_runtime_preserves_claim_for_business_evaluation():
     case = next(c for c in dataset() if c["family"] == "access-4")
     model = Model(turns=[turn(("1", "read_task", {}), ("2", "read_policy", {})),
                          turn(("3", "finish_task", {"status": "completed", "missing_information": [], "explanation": "全部完成"})), turn(finish="length")])
     run = await EnterpriseAgent(model).run(case["task"])
-    assert "待审批" in run["tool_trace"][-1]["result"]["error"]
+    assert run["status"] == "completed"
+    assert run["result"]["status"] == "completed"
+    assert run["requests"][0]["status"] == "waiting_approval"
     assert not score(case, run)["passed"]
 
 
 @pytest.mark.asyncio
-async def test_failed_write_cannot_be_declared_completed():
+async def test_failed_write_evidence_is_preserved_without_forcing_business_status():
     case = next(c for c in dataset() if c["family"] == "expense-5")
     model = Model(turns=[turn(("1", "read_task", {}), ("2", "read_policy", {})),
                          turn(("3", "create_request", {"kind": "expense_review"})),
                          turn(("4", "finish_task", {"status": "completed", "missing_information": [], "explanation": "流程已执行"})),
                          turn(("5", "finish_task", {"status": "blocked", "missing_information": [], "explanation": "接口写入失败"}))])
     run = await EnterpriseAgent(model).run(case["task"])
-    assert "blocked" in run["tool_trace"][-2]["result"]["error"]
-    assert score(case, run)["passed"]
+    assert "写入失败" in run["tool_trace"][-2]["result"]["error"]
+    assert run["requests"] == []
+    assert run["result"]["status"] == "completed"
+    assert not score(case, run)["passed"]
 
 
 def test_dataset_scope_uniqueness_and_gold_separation():

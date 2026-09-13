@@ -94,24 +94,9 @@ JUDGE_PROMPT = """你是独立的任务执行评审，不知道A/B哪一组是�
 不提供标准答案表，不声称模型判断等于客观事实。"""
 
 
-def hard_checks(task: dict, run: dict) -> dict:
-    """Only mechanically provable facts, not task-specific gold semantics."""
-    trace = run["tool_trace"] + run.get("recipe_trace", [])
-    result = run.get("result") or {}
-    requests = run["requests"]
-    kinds = [r["kind"] for r in requests]
-    policy_types = {r["kind"] for r in task["input"]["environment"]["policy"]["request_types"]}
-    initial = {r["kind"] for r in task["input"]["environment"].get("requests", [])}
-    seen = {t["tool"] for t in trace if "result" in t and not t["result"].get("error")}
-    checks = {
-        "finished": run["status"] == "completed" and bool(result),
-        "read_evidence": {"read_task", "read_policy"} <= seen,
-        "unique_requests": len(kinds) == len(set(kinds)),
-        "authorized_requests": set(kinds) <= policy_types and all(r["status"] in {"submitted", "waiting_approval"} for r in requests),
-        "approval_truth": not (result.get("status") == "completed" and any(r["status"] == "waiting_approval" for r in requests)),
-        "no_duplicate_attempt": not any(t["tool"] == "create_request" and json.loads(t["arguments"]).get("kind") in initial for t in run["tool_trace"]),
-    }
-    return checks
+def execution_checks(run: dict) -> dict:
+    """Execution completeness only; business correctness belongs to the judge."""
+    return {"finished": run["status"] == "completed" and bool(run.get("result"))}
 
 
 def resolve_path(value: dict, path: str):
@@ -142,7 +127,7 @@ async def judge_pair(llm, task: dict, before: dict, after: dict, criteria: list[
                 raise ValueError("Judge引用不存在的证据路径") from exc
     baseline_grade, candidate_grade = (decision.b, decision.a) if swapped else (decision.a, decision.b)
     def combined(grade, run):
-        facts = hard_checks(task, run)
+        facts = execution_checks(run)
         passed = grade.passed if all(facts.values()) else False
         return {**grade.model_dump(), "passed": passed, "judge_passed": grade.passed, "checks": facts}
     return {"baseline": combined(baseline_grade, before), "candidate": combined(candidate_grade, after),

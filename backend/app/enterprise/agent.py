@@ -59,8 +59,7 @@ class EnterpriseAgent:
         env = copy.deepcopy(task["input"]["environment"])
         requests = copy.deepcopy(task.get("run", {}).get("requests", env.get("requests", [])))
         catalog = {s["id"]: s for s in skills or [] if s["domain"] == task["input"]["domain"]}
-        seen, loaded, trace, seen_ids = set(), [], [], set()
-        failed_writes: set[str] = set()
+        loaded, trace, seen_ids = [], [], set()
         result = None
         recipe_trace = []
 
@@ -76,7 +75,6 @@ class EnterpriseAgent:
             return {"items": materials[offset:end], "next_cursor": f"page:{end}" if end < len(materials) else None}
 
         def read_task():
-            seen.add("task")
             value = {"employee": env["employee"], "materials": env.get("materials", []), "requests": requests, "simulation": True}
             if "material_page_size" in env:
                 page = list_materials()
@@ -84,19 +82,14 @@ class EnterpriseAgent:
             return value
 
         def read_policy():
-            seen.add("policy")
             return env["policy"]
 
         def create_request(kind: str):
-            if not {"task", "policy"} <= seen:
-                raise ValueError("先读取任务和政策")
             spec = next((r for r in env["policy"]["request_types"] if r["kind"] == kind), None)
             if spec is None:
                 raise ValueError("不支持的申请类型；不能直接授权或支付")
             if env.get("tool_failure"):
-                failed_writes.add(kind)
                 raise ValueError("模拟接口写入失败：没有创建申请")
-            failed_writes.discard(kind)
             old = next((r for r in requests if r["kind"] == kind), None)
             if old:
                 return {"existing": True, "request": old}
@@ -113,12 +106,6 @@ class EnterpriseAgent:
 
         def finish_task(**arguments):
             answer = Result.model_validate(arguments)
-            if not {"task", "policy"} <= seen:
-                raise ValueError("未核对任务与政策")
-            if failed_writes and answer.status != "blocked":
-                raise ValueError("仍有未成功的写入，任务状态必须为 blocked")
-            if answer.status == "completed" and any(r["status"] == "waiting_approval" for r in requests):
-                raise ValueError("仍有待审批申请，不能宣称已经完成")
             return answer.model_dump()
 
         handlers = {"read_task": read_task, "read_policy": read_policy, "create_request": create_request,

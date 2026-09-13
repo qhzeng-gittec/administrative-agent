@@ -331,15 +331,35 @@ async def test_judge_unknown_is_not_a_win_and_fabricated_evidence_fails(tmp_path
 
 
 @pytest.mark.asyncio
-async def test_program_facts_override_judge_success(tmp_path):
+async def test_incomplete_execution_overrides_judge_success(tmp_path):
     model = Model(default_good=True)
     t = task("j")
     good = await execute(model, t, [])
     bad = copy.deepcopy(good)
-    bad["requests"][0]["status"] = "granted"
+    bad.update(status="budget_exhausted", result=None)
     verdict = await judge_pair(model, t, good, bad, ["检查"], "key")
     assert verdict["candidate"]["judge_passed"] is True
     assert verdict["candidate"]["passed"] is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("passed", [True, False, None])
+async def test_judge_business_verdict_does_not_require_administrative_fields(passed):
+    class ArtifactJudge:
+        model = "artifact-judge-double"
+
+        async def complete_json(self, messages, **kwargs):
+            payload = json.loads(messages[-1]["content"])
+            assert payload["criteria"] == ["交付符合原始需求"]
+            assert payload["task"]["input"]["environment"] == {"brief": "生成示意图"}
+            return {label: {"passed": passed, "reason": "依据交付物与任务要求判断",
+                            "evidence_paths": [f"{label}.result"]} for label in ("a", "b")}
+
+    source = {"id": "artifact", "input": {"question": "生成示意图", "environment": {"brief": "生成示意图"}}}
+    run = {"status": "completed", "result": {"artifact": "diagram.svg"}, "tool_trace": []}
+    verdict = await judge_pair(ArtifactJudge(), source, run, run, ["交付符合原始需求"], "artifact")
+    assert verdict["candidate"]["passed"] is passed
+    assert verdict["candidate"]["checks"] == {"finished": True}
 
 
 @pytest.mark.asyncio
