@@ -1,199 +1,114 @@
-# 文枢 · 跨部门文档处理与问答助手
+# 星桥 · 行政助手 Agent 与能力进化框架
 
-面向学校多部门（教务处、学生处、财务处、人事处、后勤处、研究生院等）的官方制度文档智能处理与问答系统。
+面向入职办理、权限申请和报销检查的行政业务 Agent。系统依据当前制度调用工具办理任务，并从执行轨迹和用户反馈中发现反复出现的问题，提出 Skill／只读组合工具的新增、修订或淘汰建议，经前后对照评测后进入灰度。
 
-打通 **「文档入库 → 智能问答 → 自我进化」** 全链路：文档自动解析入库、多智能体协同精准问答（可溯源）、Loop Engineering 自我进化（自动沉淀 Skills/Hooks/Rules）、K8s 按部门弹性伸缩。
+项目重点是 **如何让 Agent 的改进有依据、可验证、可回滚**。当前行政工作台使用结构化任务和本地模拟业务接口；实现了能力进化的完整生命周期，尚未接入真实企业的审批、支付或权限写入系统。
 
-> 详细技术方案见 [`design_files/文枢-跨部门自进化文档处理与问答助手技术方案.md`](design_files/文枢-跨部门自进化文档处理与问答助手技术方案.md)
+## 主要成果
 
-## 架构（前后端分离 + 模块分离）
-
-```
-┌────────────┐   REST    ┌──────────────────────────┐
-│ Next.js     │ ───────► │ Python Orchestrator/API  │
-└────────────┘           └────────────┬─────────────┘
-                                      │ 并行部门路由
-                         ┌────────────┼────────────┐
-                         ▼            ▼            ▼
-                    dept-agent   dept-agent   dept-agent
-                         └────────────┬────────────┘
-                                      ▼
-                        MongoDB + Redis Stream + Worker
-```
-
-| 服务 | 目录 | 职责 |
+| 测量对象 | 基线 → 改进后 | 改善及条件 |
 |---|---|---|
-| 前端 | `web/` | React + Next.js 聊天界面 |
-| 后端 | `backend/` | FastAPI：文档解析/切片/向量化、BM25+向量混合检索、MongoDB/Redis 存储、对外 REST API |
-| Agent 执行引擎 | `services/pi-agent/` | 统一执行 Intent/Rewrite/Answer/Verify/Reflect 的模型推理、Agent loop 和受控工具调用 |
+| 反馈类型识别，48条开发题 | 42/48 → 44/48 | 87.5% → 91.7%，提高 **4.2个百分点**；调整上下文和分类提示 |
+| 反馈关联历史任务，同一开发集 | 40/48 → 43/48 | 83.3% → 89.6%，提高 **6.3个百分点** |
+| 入职任务，历史冻结测试 | 22/32 → 31/32 | 68.8% → 96.9%，提高 **28.1个百分点**；修复9条、无新增错误 |
+| 最新联合生成流程 | 65项相关回归测试通过 | 验证调用协议、候选评测、灰度和回滚；尚无该版本的真实模型能力增益测量 |
 
-> Python 是唯一控制平面：负责固定 DAG、鉴权、事实、记忆、部门隔离、动态策略、灰度和回滚。
-> pi 是统一的概率性 Agent 执行引擎：负责 Agent loop、模型调用和受控 tool calling。pi 不直接决定数据权限或策略发布。
+**归因区别：**前两项是反馈模块的人工迭代收益；入职提升来自历史实验中“向同一业务模型提供生成的 Skill”的对照。它们不是最新框架整体的统一准确率，也不是生产业务成功率。[结果与逐条评分摘录](docs/evaluation/results.json)
 
-## 目录结构
+## 技术方案
 
-```
-program/
-├── README.md                 # 本文件
-├── docker-compose.yml        # 全栈编排（MongoDB/Redis/backend/worker/pi-agent/web）
-├── .env.example              # 环境变量样例
-├── Makefile
-├── docs/                     # 架构 / API / 部署 / Loop 文档
-├── docs/change-audit.md      # 代码修改与说明文档覆盖审计
-├── backend/                  # Python 后端（见 backend/README.md）
-├── services/pi-agent/        # pi 智能体服务（见 services/pi-agent/README.md）
-├── web/                      # Next.js 前端（见 web/README.md）
-├── deploy/                   # K8s / Helm 部署（见 deploy/README.md）
-├── design_files/             # 设计输入
-└── department_files/         # 示例部门文档
-```
+当前行政服务采用 **Next.js 工作台 + FastAPI + SQLite 持久化作业与轨迹 + 模型原生工具调用**。业务执行、反馈识别、复盘生成和结果评审使用不同职责的模型调用；Python 负责记录、能力边界、评测执行和发布状态。
 
-## 🚀 安装 Docker Desktop 后怎么跑（推荐）
-
-> 前提：已安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并启动（Docker 图标变为 running）。
-
-```bash
-# 1. 进入项目目录
-cd program
-
-# 2. 复制环境变量并填写真实密钥（或直接用已提供的 .env）
-cp .env.example .env
-
-# 3. 一键构建并启动全栈（首次会下载镜像，较慢）
-docker compose up --build -d
-
-# 4. 查看各服务状态与日志
-docker compose ps
-docker compose logs -f
+```mermaid
+flowchart TD
+    U[员工任务与反馈] --> W[工作台 / FastAPI]
+    W --> A[业务 Agent：按需加载同域能力并调用工具]
+    A --> T[执行前快照 / 工具轨迹 / 申请状态]
+    W --> F[反馈分类与历史任务关联]
+    T --> G[同域聚类 / 任务分区]
+    F --> G
+    G --> P[发现集：一次生成候选与评测计划]
+    P --> E[验证集 + 补充题 / 留出集：前后独立执行]
+    E --> J[独立 judge + 程序硬性检查]
+    J --> C[灰度 / 正式启用 / 回滚]
+    C --> A
 ```
 
-启动完成后：
+### 1. 业务事实与模型推理分开
 
-| 服务 | 地址 |
+任务包含 `domain`、用户需求及员工／材料／政策的结构化环境。模型通过 `read_task`、`read_policy` 获取事实，通过 `create_request` 和 `finish_task` 办理与结束任务；调用和返回进入标准的 `assistant/tool` 消息序列，并保存当时的结果快照。
+
+工具层限制申请类型、阻止未读取政策就建单，以及把待审批或写入失败说成完成。政策不由 Skill 改写。当前政策由任务环境提供，真实企业制度库和材料抽取的接入属于尚未完成的部分。
+
+### 2. 从反馈发现问题，而不把投诉当成错误结论
+
+小模型识别 `possible_error / preference / none`，关联具体历史任务。按业务域分组后，以问题向量进行余弦 DBSCAN 聚类；最近500条任务中，簇至少20条、至少3条不同任务有疑似错误信号，才触发复盘。
+
+复盘同时查看普通任务和疑似失败任务，核对政策、工具结果和申请状态。例如“申请正确地等待审批，但用户要求立即开通”不应产生绕过审批的策略。相同任务被重复投诉不会重复增加疑似错误任务数；未变化的历史簇不重复复盘。
+
+### 3. 同域能力目录与联合生成
+
+框架从目录读取同业务域的有效 Skill 和工具，由业务模型依据适用说明按需选择。复盘可选择 `create / revise / select / retire`，也可以返回 `no_change / maintenance`；不要求每轮都新增能力。
+
+**最新实现将候选改动、评判标准和补充案例合并为一次输出**，共享原始业务证据和已有能力目录，减少改动目标与测试重点的不一致。候选和评测计划在执行前一起冻结；无需变更或仅需维护时，不生成评测计划。评判标准须依据原始制度和用户需求，不能以“是否照着新 Skill 执行”代替业务正确性。
+
+工具生成限定为最多4步的只读组合，可使用 `read_task / read_policy / list_materials`；分页循环、页数上限和错误传播由执行器实现。模型不生成任意可执行代码，也不会自动修改数据库或基础设施配置。
+
+### 4. 独立评审与发布生命周期
+
+同类历史按任务ID稳定划分为发现、验证和留出分区，比例约60%／20%／20%。候选生成只读取发现集；模型生成的补充题只加入验证阶段，不能代替留出历史。
+
+每个评测任务从相同执行前快照分别运行原有与候选能力目录。judge 收到原始任务、政策、A/B完整轨迹和冻结的评判标准，匿名交换组别顺序，输出通过／失败／无法判断及证据路径。程序校验证据存在，并检查结束状态、重复申请、允许的申请类型和审批状态等事实。
+
+当前验收要求足够的可判断样本、修复数大于退步数，并确认候选确实被使用。默认灰度比例10%，观察目标20个任务、最长14天；新任务使用实际执行加隔离对照评审，收益不足不转正式，明显退步可回滚。上述是当前实现与默认配置，不是已积累的生产灰度成绩。
+
+## 测评设计与结果
+
+### 反馈识别：测“有没有理解用户在反馈什么”
+
+自建120条合成反馈：3个业务域，每域8种基础反馈，每种5个表达或上下文变体；开发48条、测试72条。每条提供目标历史任务、干扰任务、用户消息及正确类别与关联ID。场景覆盖抱怨、表达偏好、新请求、成功反馈、引用他人失败以及跨任务干扰。
+
+开发发现两类错误：把引用的失败当成本人反馈；看到“仓库权限”就关联另一条权限任务。随后增加业务域上下文、明确新请求与呈现偏好的区别，并补充引用文本反例。开发分类从42/48提升到44/48，关联从40/48提升到43/48；最终反馈测试分类 **67/72（93.1%）**，需要关联历史的45条中关联正确 **43/45（95.6%）**。
+
+模型为 Qwen3-8B。开发与测试共享基础反馈模板，变体主要改变表达前缀和上下文顺序；以上衡量信号识别，不等于真实员工反馈的泛化能力。
+
+### 行政业务：测“实际办理是否正确”
+
+历史企业评测先构造216条业务题：3个域 × 每域6类情形 × 每类4个变体 × 开发／验证／测试三组。后续缺陷注入实验扩展为 **288条，学习／验证／测试各96条**，增加分页材料、读取故障和政策变更；固定选择72条学习任务实际执行，47条通过、25条失败，再由模拟用户生成反馈并触发复盘。
+
+每条题目包含用户需求、员工、材料、政策、已有申请和独立标准答案。例如差旅材料只有发票与行程单，制度要求用途说明，则正确行为是“不建单、要求补用途说明”；如果先提交再询问，即使最终回复提到补材料，仍判失败。正常等待审批或因接口故障返回受阻也可以是正确结果。
+
+业务和复盘模型为 DeepSeek V3.2，反馈分类为 Qwen3-8B，向量为 Qwen3-Embedding-8B。历史实验用程序对照标准答案检查执行结束、申请类型、缺项、业务状态、读取证据、重复申请及越权行为，所有检查同时通过才计为成功；这与当前服务的模型 judge 评分不同。
+
+| 历史实验阶段 | 业务 | 基线 → 候选 | 修复 / 新增错误 | 结果 |
+|---|---|---:|---:|---|
+| controlled-05 独立验证 | 入职 | 24/32 → 31/32 | 7 / 0 | 通过 |
+| controlled-05 独立验证 | 权限 | 28/32 → 31/32 | 4 / 1 | 拒绝 |
+| controlled-05 独立验证 | 报销 | 6/32 → 22/32 | 18 / 2 | 拒绝 |
+| controlled-05 冻结测试 | 入职 | 22/32 → 31/32 | 9 / 0 | 隔离实验接受，未生产发布 |
+
+该历史版本采用“有修复且无新增错误”的验收规则，区别于当前净提升门槛。报销工具虽提高16条净通过数，仍因新增错误被拒绝：一个反例中分页工具已经读到用途说明和行程单，模型却仍把它们列为缺失。这说明改善资料获取，不必然保证模型正确使用资料。
+
+全部96条冻结测试为53/96 → 62/96；权限和报销没有候选获准进入测试，其候选栏复用基线，不是额外独立运行。主实验共264个唯一任务配置、480次业务执行；不同划分仍共享业务机制，主表每条件单次执行，不能视为独立故障种类或统计稳定性证明。
+
+更早的 full-04 实验也出现 **62/72 → 65/72，但新增3条错误而整组拒绝**。该轮触发复盘的历史是预写夹具；controlled-05 才改用模型实际执行的失败轨迹。两轮均无生产发布。[完整评分计数与来源哈希](docs/evaluation/results.json)
+
+### 最新版本验证范围
+
+联合生成流程通过65项直接相关的离线回归测试，覆盖 Skill／工具候选、补充题结构与来源校验、留出隔离、judge未知或错误证据、失败续跑、灰度、正式启用与回滚。最终提示词调整后，28项内部进化测试再次通过。测试使用模型替身验证工程行为，没有重新调用付费模型测能力提升。
+
+当前结果支持“特定合成业务中候选有可测收益，验收能暴露副作用”；最新联合生成相对分离流程的业务增益、judge与人工判定的一致性、真实企业迁移和生产收益尚未测量。
+
+## 代码导航
+
+| 关键部分 | 实现 |
 |---|---|
-| 前端聊天界面 | http://localhost:8080 |
-| 后端 API / OpenAPI 文档 | http://localhost:8000/docs |
-| pi 智能体服务 | http://localhost:8100/health |
-| MongoDB | `localhost:27017`（账号密码见 `.env`） |
+| 业务工具循环与状态约束 | [agent.py](backend/app/enterprise/agent.py) |
+| 执行快照、反馈与后台作业 | [service.py](backend/app/enterprise/service.py) |
+| 反馈分类与同域聚类 | [feedback.py](backend/app/enterprise/feedback.py)、[mining.py](backend/app/enterprise/mining.py) |
+| 联合生成、版本与灰度生命周期 | [evolution.py](backend/app/enterprise/evolution.py) |
+| 补充题校验、独立judge与硬性检查 | [assessment.py](backend/app/enterprise/assessment.py) |
+| 受限只读工具执行器 | [tool_builder.py](backend/app/enterprise/tool_builder.py) |
+| 生命周期回归测试 | [test_internal_evolution.py](backend/tests/test_internal_evolution.py) |
 
-### 首次导入示例部门文档
-
-```bash
-# 种子数据（部门/术语/校历/默认规则）
-docker compose exec backend python -m scripts.seed_data
-
-# 导入 department_files 下的 PDF/Word（脚本会自动探测 /app/department_files，也可显式指定）
-docker compose exec backend python -m scripts.ingest_department_files --base /app/department_files
-```
-
-`seed_data` 与后端启动过程会幂等初始化 3 个可执行基线 Skill（极端天气安全响应、校园事项步骤导航、学术节点与截止日期核验）。它们会真实参与查询匹配、检索扩展、回答模板和策略执行记录，不是只用于页面展示。
-
-管理端“进化 Loop”采用异步作业跟踪：触发后页面自动轮询 `queued → running → completed`，展示 Observe / Reflect / Adapt / Deploy 阶段、反馈信号、根因、候选、发布结果和策略资产前后变化。
-
-### 模型连通性自检（doctor）
-
-```bash
-# 验证 DeepSeek + 中转站（bge 重排/Embedding）能否调用
-docker compose exec backend python -m scripts.doctor
-
-# 验证 pi 框架 + DeepSeek 是否正常
-# 注意：doctor 依赖 devDependencies（tsx），容器镜像内不可用，只能在本地运行：
-cd services/pi-agent && npm install && npm run doctor
-```
-
-停止与清理：
-
-```bash
-docker compose down           # 停止
-docker compose down -v        # 停止并清除数据卷
-```
-
-## 本地开发（非 Docker）
-
-需 Python 3.9+（推荐 3.11）、Node.js ≥ 22.19。
-
-```bash
-# 1) 后端
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export STORAGE_MODE=memory   # 无 MongoDB/Redis 时用内存模式
-uvicorn app.main:app --reload --port 8000
-
-# 2) pi 智能体服务（另开终端）
-cd services/pi-agent
-npm install
-npm run dev                  # :8100
-
-# 3) 前端（另开终端）
-cd web
-npm install
-BACKEND_URL=http://localhost:8000 npm run dev   # :3000
-```
-
-## 环境变量（关键项）
-
-| 变量 | 说明 | 默认 |
-|---|---|---|
-| `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 主力对话模型 | `deepseek-v4-flash` |
-| `RELAY_API_KEY` / `RELAY_BASE_URL` | 中转站（非 DeepSeek 模型） | `https://yunwu.ai/v1` |
-| `EMBEDDING_MODEL` | 向量模型（经中转站） | `text-embedding-3-large` |
-| `RERANKER_MODEL` | bge 重排模型（经中转站） | `BAAI/bge-reranker-v2-m3` |
-| `PI_AGENT_ENABLED` | 是否使用 pi 统一执行概率性 Agent；失败时自动回退 Python 本地实现 | `true` |
-| `PI_RUNTIME_TIMEOUT_*` | pi Intent/Rewrite/Answer/Verify/Reflect 分阶段超时 | `8/10/45/20/45s` |
-| `DEPT_AGENTS_ENABLED` / `DEPT_ID` | 全局部门路由开关 / 部门 Pod 强制范围 | `false` / 空 |
-| `VECTOR_BACKEND` | 向量存储；K8s 使用共享 `mongo` | `memory` |
-| `STORAGE_MODE` | `mongo` / `memory` | `mongo` |
-| `AUTH_SECRET` | Token 签名密钥（**生产必须改为强随机值**） | dev 占位值 |
-| `INTERNAL_API_TOKEN` | 内部接口 `/internal/*` 共享令牌（backend 与 pi-agent 一致） | 空（未配置则内部接口不可用） |
-| `SEED_DEMO_USERS` | 是否创建演示账号（生产设 `false`） | `true` |
-| `MAX_UPLOAD_MB` | 文档上传大小上限 | `20` |
-| `LOGIN_MAX_ATTEMPTS` / `LOGIN_WINDOW_SECONDS` | 登录失败限流 | `5` / `300` |
-| `MEMORY_SESSION_TTL_SECONDS` | Redis 工作记忆 TTL | `1800` |
-| `MEMORY_EVENT_RETENTION_DAYS` / `MEMORY_SUMMARY_RETENTION_DAYS` | 情景事件/摘要保留期 | `90` / `180` |
-| `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` | MongoDB 根账号（compose 初始化） | `wenshu_admin` / 强随机 |
-| `REDIS_PASSWORD` | Redis 口令（compose requirepass） | 强随机 |
-
-> 已通过 `scripts/doctor.py` 实测：DeepSeek `deepseek-v4-flash` ✅、中转站 `gpt-5.5` ✅、
-> `text-embedding-3-large` ✅、bge 重排 `BAAI/bge-reranker-v2-m3` ✅。
-> 注意：该中转站**不提供** `bge-m3` embedding 与 `gpt-5.5-pro`（这两个名字无效）。
-
-## 各模块 README
-
-- [`backend/README.md`](backend/README.md)
-- [`services/pi-agent/README.md`](services/pi-agent/README.md)
-- [`web/README.md`](web/README.md)
-- [`deploy/README.md`](deploy/README.md)
-- [`docs/architecture.md`](docs/architecture.md) · [`docs/api.md`](docs/api.md) · [`docs/deployment.md`](docs/deployment.md) · [`docs/loop-engineering.md`](docs/loop-engineering.md)
-
-## 技术栈
-
-Python 3.11 · FastAPI · MongoDB(motor) · Redis · Next.js 15 · React 19 · TypeScript ·
-[pi](https://github.com/earendil-works/pi)（pi-agent-core + pi-ai）· DeepSeek（对话）·
-text-embedding-3-large / bge-reranker-v2-m3（经中转站）· Docker · Kubernetes · Helm
-
-## 验证
-
-```bash
-cd backend && .venv/bin/pytest -q
-cd web && npm run build
-cd services/pi-agent && npm run build
-```
-
-真实文档评测集位于 `backend/evaluation/real_document_qa.json`，运行
-`python -m scripts.evaluate_rag` 可得到 Recall@5、MRR、引用正确率和答案一致性。
-部门 Agent 的 1→20 副本负载测试见 `loadtest/README.md`。
-
-## 记忆与事实边界
-
-系统采用“一个独立事实平面 + 五个记忆平面”：
-
-- `documents/chunks` 是最高权威事实源，不属于模型记忆；
-- Redis 会话工作记忆；
-- MongoDB 情景事件与摘要；
-- 可解释、可删除的用户语义记忆；
-- 带官方来源和部门权限的组织知识记忆；
-- Skills/Hooks/Rules/实验组成的程序性与学习记忆。
-
-所有组织 FAQ 必须绑定 active 文档 chunk，归档或版本替换后自动失效。详见
-[`backend/app/memory/README.md`](backend/app/memory/README.md)。
+仓库保留早期文档问答和研发诊断模块，但本页聚焦当前行政任务与能力进化。旧企业离线脚本已移出运行目录；历史结果以只读摘录保留，不作为当前服务的出题入口。需要本地演示时可参考 [启动脚本](start-support.ps1) 和 [环境变量模板](.env.example)。

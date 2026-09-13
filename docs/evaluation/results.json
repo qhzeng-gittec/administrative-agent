@@ -1,0 +1,3415 @@
+{
+  "description": "Read-only excerpts from historical experiments; not a benchmark of the current combined proposal pipeline. Paths identify local archives excluded from the public repository.",
+  "sources": {
+    "feedback_before": {
+      "archive_path": "backend/data/support/enterprise-experiments/development-02/report.json",
+      "sha256": "f7f147594dc12dbe62519b6e8ba2c6a00b74ce414334d61de6c6a06f2777e5f1"
+    },
+    "feedback_after": {
+      "archive_path": "backend/data/support/enterprise-experiments/development-05/report.json",
+      "sha256": "85de7e136c3dddc2b8108f9f19026c7c43b3802d96ae551900270af4df444b67"
+    },
+    "enterprise": {
+      "archive_path": "backend/data/support/enterprise-experiments/full-04/report.json",
+      "sha256": "49728c9a379b788f890d0eed8814d57c9498010d73002c48f0c6d3f3aa1555d0"
+    },
+    "controlled": {
+      "archive_path": "backend/evaluation/controlled-v1/report.json",
+      "sha256": "4d9cb6d16b43896544a99ef3b359cf0750c7c44c1145fd55fa2c97ac4c5c4f5d"
+    },
+    "controlled_test": {
+      "archive_path": "backend/evaluation/controlled-v1/test.jsonl",
+      "sha256": "f7558a13ca390f4f1e957e1214b8128b8feb3c90725a8ef3a315657b4f6d056b"
+    },
+    "controlled_verification": {
+      "archive_path": "backend/evaluation/controlled-v1/verification.json",
+      "sha256": "6ad923c7ccb15ca5fb20e6d131668eaa5e54b53371f48de5c5cb5556d9470b6c"
+    }
+  },
+  "feedback_development": {
+    "before": {
+      "cases": 48,
+      "signal_correct": 42,
+      "association_correct": 40
+    },
+    "after": {
+      "cases": 48,
+      "signal_correct": 44,
+      "association_correct": 43
+    }
+  },
+  "feedback_test": {
+    "cases": 72,
+    "signal_correct": 67,
+    "association_correct": 65,
+    "feedback_link_cases": 45,
+    "feedback_link_correct": 43,
+    "confusion": {
+      "possible_error -> possible_error": 27,
+      "preference -> preference": 18,
+      "none -> preference": 3,
+      "none -> none": 22,
+      "none -> possible_error": 2
+    }
+  },
+  "enterprise_full04": {
+    "models": {
+      "classifier": "qwen/qwen3-8b",
+      "reviewer_and_agent": "deepseek/deepseek-v3.2",
+      "embedding": "qwen/qwen3-embedding-8b"
+    },
+    "frozen_test": {
+      "cases": 72,
+      "baseline_correct": 62,
+      "candidate_correct": 65,
+      "baseline_calls": 339,
+      "candidate_calls": 363,
+      "regressions": [
+        "e2e8409600a9042f",
+        "e870ce7f706d11d0",
+        "4bf2ca2ed9a75a88"
+      ]
+    },
+    "release_acceptance": {
+      "passed": false,
+      "regressions": [
+        "4bf2ca2ed9a75a88",
+        "e2e8409600a9042f",
+        "e870ce7f706d11d0"
+      ],
+      "samples": 72,
+      "dataset_hash": "d2fd1291c9bed22be4997d18870e939c3716f86ce0fcf42526c7021dab48bca5",
+      "policy_ids": [
+        "549f697b61e143e392592b5e222ebac3",
+        "59433b721d7f42c3bcf3920ff7c3f70a"
+      ],
+      "at": "2026-09-13T04:10:31.425137+00:00",
+      "reasons": [
+        "frozen_regression"
+      ]
+    },
+    "authored_learning_histories": true
+  },
+  "controlled05": {
+    "version": "controlled-v1",
+    "dataset_hash": "e8aa3afec5a318bd1d9ae065ec667cdd38734cb1919f34303bf7655b7d9b5fa6",
+    "models": {
+      "agent_builder": "deepseek/deepseek-v3.2",
+      "feedback_user": "qwen/qwen3-8b",
+      "simulated_user": "deepseek/deepseek-v3.2",
+      "embedding": "qwen/qwen3-embedding-8b"
+    },
+    "synthetic": true,
+    "history_source": "actual_model_execution",
+    "constructed_cases": 288,
+    "learning": {
+      "cases": 72,
+      "correct": 47,
+      "suspected_signals": 37
+    },
+    "frozen_test": {
+      "cases": 96,
+      "baseline_correct": 53,
+      "candidate_correct": 62,
+      "fixes": [
+        "9b66b6af13ad1b62ce95",
+        "163243ead858d70c3dff",
+        "cf219c7d6f7f6b383e8c",
+        "96ae49379fd836824031",
+        "5e261190b3b3fc7b776a",
+        "bf20cf12620f207d9cf5",
+        "24d21796af77bdc36cbd",
+        "6244cd05f28d5804af47",
+        "39f7010162e24215d6b4"
+      ],
+      "regressions": [],
+      "tool_used_cases": 0,
+      "skill_loaded_cases": 32,
+      "baseline_tool_calls": 547,
+      "candidate_tool_calls": 552,
+      "candidate_internal_reads": 0
+    },
+    "accepted_simulation": true,
+    "production_deployed": false,
+    "validation": [
+      {
+        "domain": "onboarding",
+        "status": "accepted_simulation",
+        "cases": 32,
+        "baseline_correct": 24,
+        "candidate_correct": 31,
+        "fixes": [
+          "8a4334304ceaf8dec8e6",
+          "5999b1e0f22cea1dab75",
+          "8f925edb7de2e93fda75",
+          "52fba08f2814961659b8",
+          "b3dfdf89e0475b1f7710",
+          "ee5c11ee4f1dd23e5aa3",
+          "c026bbb404e887879d0c"
+        ],
+        "regressions": [],
+        "tool_used_cases": 0,
+        "skill_loaded_cases": 32,
+        "baseline_tool_calls": 215,
+        "candidate_tool_calls": 210,
+        "candidate_internal_reads": 0
+      },
+      {
+        "domain": "expense",
+        "status": "rejected_validation",
+        "cases": 32,
+        "baseline_correct": 6,
+        "candidate_correct": 22,
+        "fixes": [
+          "e4ac1758c37ee9946f4e",
+          "9d1bf2b78d4476ca553b",
+          "c5a4edd38c28f1be6425",
+          "64fdf8374449f985fe8f",
+          "4f78e611b4ed5dc115a6",
+          "5d746f4f19d8716ba9d3",
+          "35e7167a2338e56809bf",
+          "af2b4afee16120d7969c",
+          "c46c7ef7098b37bebf38",
+          "9d37fd5c22291b423daf",
+          "b378fbf68e94d1746ec2",
+          "cf8a70dfa1a8c2734ef5",
+          "18f41b58c1efbb521403",
+          "2905a705a7377d840ed2",
+          "557a4a15b211ddaf4250",
+          "c334adbfd6c54d5633ad",
+          "e9c47a98dcc3ee311fe2",
+          "bb36a817ec5b4f05eab7"
+        ],
+        "regressions": [
+          "5dd8a7ef67962c0acb00",
+          "a146107c8d8884ba78d8"
+        ],
+        "tool_used_cases": 32,
+        "skill_loaded_cases": 0,
+        "baseline_tool_calls": 153,
+        "candidate_tool_calls": 151,
+        "candidate_internal_reads": 242
+      },
+      {
+        "domain": "access",
+        "status": "rejected_validation",
+        "cases": 32,
+        "baseline_correct": 28,
+        "candidate_correct": 31,
+        "fixes": [
+          "039f04b5b97f846cf4aa",
+          "f5f68c292ed2a865f064",
+          "5ee1d4d5dfa1144adab6",
+          "84fef587d61e90bda6b5"
+        ],
+        "regressions": [
+          "b868acfe42310fb9f376"
+        ],
+        "tool_used_cases": 0,
+        "skill_loaded_cases": 32,
+        "baseline_tool_calls": 147,
+        "candidate_tool_calls": 162,
+        "candidate_internal_reads": 0
+      }
+    ],
+    "test_scores": [
+      {
+        "id": "0151eb8c61f78ea7220b",
+        "family": "expense-3",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "018189f8b02b43b2db80",
+        "family": "onboarding-4",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "039f7bff1359a5d4135d",
+        "family": "onboarding-4",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "0545eb1aa6841b0a8682",
+        "family": "access-2",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "09414699d7b5687c2889",
+        "family": "expense-policy_revision",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "0f90fd372caef3935fa8",
+        "family": "onboarding-5",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "163243ead858d70c3dff",
+        "family": "onboarding-2",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "1b1cdbc955cd26c8d793",
+        "family": "access-0",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "2027f8fcd494f89ce2dd",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "24d21796af77bdc36cbd",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "24d4e7acd40adeca1219",
+        "family": "expense-read_outage",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "24ec3f76a4d3459f3093",
+        "family": "access-1",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "25bb0ad25bcfb3274285",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "2ce48a2667afe9760bf6",
+        "family": "expense-2",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "3029401f2c3952823fd2",
+        "family": "onboarding-5",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "314bff783c8e3ecfc55f",
+        "family": "access-1",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "336a73148b6055384cd0",
+        "family": "onboarding-3",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "352a0ffc532f56f95000",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "39f7010162e24215d6b4",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "4358df1f8fa468ef0f8e",
+        "family": "onboarding-4",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "4920e428539ac295caf0",
+        "family": "expense-read_outage",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "4bd38a0ea6d181af34bb",
+        "family": "onboarding-5",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "4c6d0842e4019cb54033",
+        "family": "onboarding-1",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "500623d77ed3c79f7ace",
+        "family": "onboarding-3",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "54475f6372cdbb09b3ac",
+        "family": "expense-1",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "58628834e758fc836be1",
+        "family": "access-0",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "5c860a7c34408913ccb6",
+        "family": "expense-policy_revision",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "5d0e58226d961b27a3a1",
+        "family": "expense-5",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "5e261190b3b3fc7b776a",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "61771f536a459d1cfe7c",
+        "family": "onboarding-1",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "61ad0e66d65d9a774ecc",
+        "family": "onboarding-0",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "6244cd05f28d5804af47",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "6340df70b12ebf6fb4f7",
+        "family": "onboarding-3",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "664fef6193a12abcf9cd",
+        "family": "onboarding-2",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "66d5b7c7619214c00596",
+        "family": "expense-read_outage",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "67641eb42916534bd1e7",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "788f284292d4253c4ad1",
+        "family": "expense-0",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "7b5bf906a3748892c066",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "7d4139b2c6ee86e74a04",
+        "family": "access-2",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "812f6b195328acd29196",
+        "family": "access-5",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "836cc35d2b8a6cf12147",
+        "family": "access-4",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "88fb64f18557f8f103a3",
+        "family": "onboarding-1",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "8bd61e67af327f662686",
+        "family": "onboarding-0",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9375657a85d75eafea2c",
+        "family": "expense-4",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9485d7f77c34e1c8c192",
+        "family": "expense-0",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "96ae49379fd836824031",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "973ed96299275027574e",
+        "family": "expense-5",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "97af2506e43eb0c8fbf7",
+        "family": "onboarding-2",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "986f961e172591be1386",
+        "family": "onboarding-3",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9b66b6af13ad1b62ce95",
+        "family": "onboarding-1",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9b6d42e514a5edcc8557",
+        "family": "expense-policy_revision",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9b724333641f047fd2b5",
+        "family": "expense-1",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9bb1d67661fca2688b35",
+        "family": "access-3",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "9fd3b1e09138c65e7147",
+        "family": "access-5",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "a09e2b8d35aa20e25e83",
+        "family": "onboarding-4",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "a1403ca3dec4dd9979f8",
+        "family": "onboarding-0",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "a193f4379d0b560a6101",
+        "family": "expense-1",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "a31b353abd669830ded7",
+        "family": "access-3",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "a9f6fcbcf3579b02cc31",
+        "family": "access-2",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "aca0e2ceaa9d3497ef57",
+        "family": "expense-1",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b1837234b8c530636f07",
+        "family": "access-4",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b1b1a094cd5e144abe55",
+        "family": "access-4",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b60e05f461a7f67cdef1",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b62b01da7bd5d0437687",
+        "family": "expense-4",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b7ebc6f6d8631de87bfe",
+        "family": "expense-3",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b8108cac1d01a2c1cdda",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "b8f2057adcbfe9ef2a37",
+        "family": "access-2",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "ba46913ca8a8f6feb989",
+        "family": "expense-read_outage",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "bf20cf12620f207d9cf5",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "c12d4c6d428b49c51393",
+        "family": "expense-2",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "c5909632bff64398eef0",
+        "family": "expense-4",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "c78feb8d283a39e1de93",
+        "family": "onboarding-policy_revision",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "c935089b22022cde782b",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "cea056571835dd2c485e",
+        "family": "access-5",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "cf219c7d6f7f6b383e8c",
+        "family": "onboarding-5",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "d54b4da74b69c9d497ad",
+        "family": "expense-3",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "d7219185a12788907226",
+        "family": "access-policy_revision",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "db54e7ca86dbba9013e6",
+        "family": "access-0",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "df50500197ba27e0d886",
+        "family": "access-3",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e12a1bc6e704810ded2c",
+        "family": "expense-5",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e21662beb1d3092786fe",
+        "family": "expense-0",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e43fe164185a0f348e0f",
+        "family": "onboarding-0",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e4d9b282d9d10aa47c76",
+        "family": "expense-3",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e75c8500a7ad4aee6e71",
+        "family": "access-5",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "e7892c7c3fb06ea22e72",
+        "family": "expense-5",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "eca4753b4cc282a01ffb",
+        "family": "expense-2",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "edc27f4d8fd52c846f92",
+        "family": "expense-4",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "ee2830f3b2786bf56730",
+        "family": "expense-2",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "ee4dfeba501314d124ad",
+        "family": "access-0",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "efc0820f8250340cb9ae",
+        "family": "expense-0",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "f128b56608e1f449771f",
+        "family": "access-1",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "f21416ab212e6e20bc00",
+        "family": "access-1",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "f879530fab8826c73fbc",
+        "family": "access-3",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": true,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": false,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "fcc269840bccff907d33",
+        "family": "access-4",
+        "domain": "access",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "ff74c34c10eb8af4c3f7",
+        "family": "expense-policy_revision",
+        "domain": "expense",
+        "split": "test",
+        "paired": false,
+        "baseline": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": false,
+          "checks": {
+            "completed": false,
+            "requests": false,
+            "no_duplicate_records": true,
+            "status": false,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      },
+      {
+        "id": "ffdcd22179f1ed7e5230",
+        "family": "onboarding-2",
+        "domain": "onboarding",
+        "split": "test",
+        "paired": true,
+        "baseline": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        },
+        "candidate": {
+          "passed": true,
+          "checks": {
+            "completed": true,
+            "requests": true,
+            "no_duplicate_records": true,
+            "status": true,
+            "missing_information": true,
+            "evidence": true,
+            "no_duplicate_attempts": true,
+            "no_unauthorized_grants": true
+          }
+        }
+      }
+    ],
+    "verification": {
+      "model_execution_attempts_regraded": 480,
+      "unique_task_configurations": 264,
+      "case_count": 288,
+      "checksums_verified": 25,
+      "report_links_verified": 10,
+      "environment_api_key_leaks": 0,
+      "python_regression_tests_passed": 38,
+      "typescript": "passed",
+      "generated_tool_contract_checks": 16,
+      "human_participants": 0
+    },
+    "test_by_domain": {
+      "onboarding": {
+        "cases": 32,
+        "baseline_correct": 22,
+        "candidate_correct": 31
+      },
+      "access": {
+        "cases": 32,
+        "baseline_correct": 25,
+        "candidate_correct": 25
+      },
+      "expense": {
+        "cases": 32,
+        "baseline_correct": 6,
+        "candidate_correct": 6
+      }
+    }
+  }
+}
