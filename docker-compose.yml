@@ -1,0 +1,32 @@
+name: starbridge
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SUPPORT_DATA_DIR: /data/enterprise
+    ports:
+      - "8000:8000"
+    volumes:
+      - enterprise_data:/data/enterprise
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  web:
+    build:
+      context: ./web
+      args:
+        BACKEND_URL: http://backend:8000
+    restart: unless-stopped
+    ports:
+      - "8080:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+volumes:
+  enterprise_data:

@@ -1,0 +1,28 @@
+# 网关/入口（含限流注解示例，按实际 Ingress Controller 调整）
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wenshu-ingress
+  namespace: wenshu
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+spec:
+  rules:
+    - host: wenshu.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000

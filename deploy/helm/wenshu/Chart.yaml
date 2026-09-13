@@ -1,0 +1,6 @@
+apiVersion: v2
+name: wenshu
+description: 文枢 · 跨部门文档处理与问答助手（部门 Agent 模板化部署）
+type: application
+version: 0.1.0
+appVersion: "1.0"

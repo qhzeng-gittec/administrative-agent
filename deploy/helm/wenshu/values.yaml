@@ -1,0 +1,83 @@
+# 文枢 Helm Chart 默认值
+
+image:
+  repository: school-doc-agent
+  tag: "v1.0"
+  pullPolicy: IfNotPresent
+
+# 密钥（生产建议使用外部 Secret / SealedSecret，勿提交真实值）
+secrets:
+  deepseekApiKey: ""
+  relayApiKey: ""
+  authSecret: "change-me-strong-random-secret"
+  internalApiToken: "change-me-strong-random-token"
+  mongoUser: "wenshu_admin"
+  mongoPassword: "change-me-strong-mongo-password"
+  redisPassword: "change-me-strong-redis-password"
+  mongodbUri: "mongodb://wenshu_admin:change-me-strong-mongo-password@mongodb:27017/wenshu?authSource=admin"
+  redisAddr: "redis://:change-me-strong-redis-password@redis:6379"
+
+# 全局服务
+backend:
+  enabled: true
+  replicas: 2
+  maxReplicas: 10
+  resources:
+    requests: { cpu: "250m", memory: "256Mi" }
+    limits: { cpu: "2000m", memory: "2Gi" }
+
+piAgent:
+  enabled: true
+  replicas: 2
+  image:
+    repository: school-doc-agent
+    tag: "pi-v1.0"
+  resources:
+    requests: { cpu: "250m", memory: "256Mi" }
+    limits: { cpu: "1000m", memory: "1Gi" }
+
+loopEngine:
+  enabled: true
+  interval: 300
+  loopPhase: "human_on_loop"
+
+uploads:
+  accessMode: ReadWriteMany
+  size: 10Gi
+
+# 模型 / 向量配置
+model:
+  deepseekModel: "deepseek-v4-flash"
+  deepseekBaseUrl: "https://api.deepseek.com"
+  relayBaseUrl: "https://yunwu.ai/v1"
+  embeddingProvider: "relay"
+  embeddingModel: "text-embedding-3-large"
+  vectorBackend: "mongo"
+
+# 部门 Agent（模板化：每项渲染一个独立 Deployment + HPA）
+departments:
+  - id: dept_jwc
+    name: 教务处
+    minReplicas: 2
+    maxReplicas: 20
+    resources:
+      requests: { cpu: "500m", memory: "512Mi" }
+      limits: { cpu: "2000m", memory: "2Gi" }
+  - id: dept_xsc
+    name: 学生处
+    minReplicas: 2
+    maxReplicas: 20
+    resources:
+      requests: { cpu: "500m", memory: "512Mi" }
+      limits: { cpu: "2000m", memory: "2Gi" }
+  - id: dept_hqc
+    name: 后勤处
+    minReplicas: 1
+    maxReplicas: 5
+    resources:
+      requests: { cpu: "250m", memory: "256Mi" }
+      limits: { cpu: "1000m", memory: "1Gi" }
+
+ingress:
+  enabled: false
+  host: wenshu.example.com

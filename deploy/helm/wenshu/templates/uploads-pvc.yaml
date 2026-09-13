@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "wenshu.fullname" . }}-uploads
+  labels:
+    {{- include "wenshu.labels" . | nindent 4 }}
+spec:
+  accessModes: [{{ .Values.uploads.accessMode | quote }}]
+  resources:
+    requests:
+      storage: {{ .Values.uploads.size }}
