@@ -8,6 +8,7 @@ import pytest
 
 from app.config import Settings
 from app.enterprise.assessment import judge_pair, summarize, execute
+from app.enterprise.agent import builtin_tools
 from app.enterprise.evolution import (active, advance, expire_trials, lifecycle_commit, observe_episode,
                                       observed_tasks, partition, propose, run_cycle, select_catalog)
 from app.enterprise.examples import examples
@@ -60,7 +61,9 @@ class Model:
                 {"name": "task", "tool": "read_task", "collect_pages": False}, {"name": "policy", "tool": "read_policy", "collect_pages": False}]}
             mutation = self.action in {"create", "revise"}
             noop = self.action in {"no_change", "maintenance"}
-            return {"evaluation": None if noop else evaluation, "change": {"action": self.action, "reason": "多个任务没有按当前材料正确办理", "evidence_ids": [t["id"] for t in data["discovery"][:2]],
+            return {"reuse_assessment": {"related_capability_ids": [r["id"] for r in data["current_capabilities"]],
+                                        "reason": "对照已有正文和实际使用记录，选择最小变更"},
+                    "evaluation": None if noop else evaluation, "change": {"action": self.action, "reason": "多个任务没有按当前材料正确办理", "evidence_ids": [t["id"] for t in data["discovery"][:2]],
                     "target_id": self.target, "kind": None if noop else self.kind,
                     "selection": "费用核对时加载；repair" if self.action in {"create", "revise", "select"} else None,
                     "skill": body if mutation and self.kind == "skill" else None, "tool": tool if mutation and self.kind == "tool" else None}}
@@ -182,6 +185,68 @@ def capability(kind="skill"):
         body = {"name": "generated_old", "domain": "expense", "description": "已有只读组合查询工具", "steps": [{"name": "task", "tool": "read_task", "collect_pages": False}]}
     return {"id": "old", "domain": "expense", "kind": kind, "body": body, "selection": "旧说明", "version": 1,
             "digest": digest(body), "status": "active", "created_at": now()}
+
+
+def test_active_catalog_does_not_lose_older_capabilities(tmp_path):
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    old = capability()
+    store.put("capability", old)
+    for i in range(501):
+        store.put("capability", {**old, "id": f"other-{i}", "domain": "access"})
+    store.put("capability", {**old, "id": "retired", "status": "retired"})
+    assert active(store, "expense") == [old]
+    assert select_catalog(store, "expense", "user")[0] == [old]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("kind", ["skill", "tool"])
+async def test_proposal_reads_existing_body_and_can_only_change_selection(kind):
+    old = capability(kind)
+    model = Model(action="select", kind=kind, target=old["id"])
+    discovery = [task("d1"), task("d2")]
+    discovery[0]["run"] = {"loaded_skills": [], "tool_trace": []}
+    cycle = {"id": "selection", "domain": "expense", "before": [old],
+             "partitions": {"discovery": discovery}, "discovery_feedback": []}
+    result = await propose(model, cycle, 2)
+    payload = model.payloads[0]
+    assert payload["current_capabilities"] == [old]
+    assert payload["builtin_tools"] == builtin_tools()
+    assert {r["function"]["name"] for r in payload["builtin_tools"]} == {
+        "read_task", "read_policy", "create_request", "load_skill", "finish_task", "list_materials"}
+    assert payload["discovery"][0]["run"] == discovery[0]["run"]
+    assert result["after"][0]["body"] == old["body"]
+    assert result["after"][0]["replaces"] == old["id"]
+    assert result["reuse_assessment"]["related_capability_ids"] == [old["id"]]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("kind", ["skill", "tool"])
+async def test_renaming_existing_content_cannot_create_duplicate(kind):
+    old = capability(kind)
+    class DuplicateModel(Model):
+        async def complete_json(self, messages, **kwargs):
+            response = await super().complete_json(messages, **kwargs)
+            response["change"][kind] = {**old["body"], "name": "generated_renamed" if kind == "tool" else "改名策略",
+                                        "description": "相同功能换了新的描述"}
+            return response
+    cycle = {"id": "duplicate", "domain": "expense", "before": [old],
+             "partitions": {"discovery": [task("d1"), task("d2")]}, "discovery_feedback": []}
+    with pytest.raises(ValueError, match="换名新增"):
+        await propose(DuplicateModel(kind=kind), cycle, 2)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("reviewed", [[], ["other-domain-capability"]])
+async def test_selection_requires_review_of_current_target(reviewed):
+    class InvalidReview(Model):
+        async def complete_json(self, messages, **kwargs):
+            response = await super().complete_json(messages, **kwargs)
+            response["reuse_assessment"]["related_capability_ids"] = reviewed
+            return response
+    cycle = {"id": "review", "domain": "expense", "before": [capability()],
+             "partitions": {"discovery": [task("d1"), task("d2")]}, "discovery_feedback": []}
+    with pytest.raises(ValueError, match="复用分析"):
+        await propose(InvalidReview(action="select", target="old"), cycle, 2)
 
 
 @pytest.mark.asyncio

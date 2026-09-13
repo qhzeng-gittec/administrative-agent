@@ -29,6 +29,13 @@ class EnterpriseStore(SkillRegistry):
             rows = db.execute("SELECT body FROM enterprise_records WHERE kind=? ORDER BY rowid DESC LIMIT ?", (kind, limit)).fetchall()
         return [json.loads(row[0]) for row in rows]
 
+    def active_capabilities(self, domain: str) -> list[dict]:
+        with self.connection() as db:
+            rows = db.execute("SELECT body FROM enterprise_records WHERE kind='capability' "
+                              "AND json_extract(body, '$.domain')=? AND json_extract(body, '$.status')='active' "
+                              "ORDER BY id", (domain,)).fetchall()
+        return [json.loads(row[0]) for row in rows]
+
     def enqueue(self, job_type: str, payload: dict, *, job_id: str | None = None) -> dict:
         row = {"id": job_id or uuid.uuid4().hex, "type": job_type, "payload": payload, "status": "queued", "created_at": now()}
         with self.connection() as db:

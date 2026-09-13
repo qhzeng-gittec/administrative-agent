@@ -38,6 +38,19 @@ needs_information 只表示缺员工信息或材料，missing_information 使用
 """
 
 
+def builtin_tools() -> list[dict]:
+    tools = [function("read_task", "读取员工材料和本任务已有申请。", {}, []),
+             function("read_policy", "读取当前业务的有效制度与申请类型；按条件判断应办理什么。", {}, []),
+             function("create_request", "在本地模拟系统创建申请，按类型路由部门；不授权、不付款。", {"kind": {"type": "string"}}, ["kind"]),
+             function("load_skill", "按需加载一条授权策略。", {"skill_id": {"type": "string"}}, ["skill_id"]),
+             function("finish_task", "提交办理状态。", {
+                 "status": {"type": "string", "enum": ["completed", "waiting_approval", "needs_information", "blocked"]},
+                 "missing_information": {"type": "array", "items": {"type": "string"}},
+                 "explanation": {"type": "string"}}, ["status", "missing_information", "explanation"])]
+    tools.append(function("list_materials", "读取材料分页。cursor省略表示第一页，按next_cursor续查至null才完整；接口错误表示未知。", {"cursor": {"type": ["string", "null"]}}, []))
+    return tools
+
+
 class EnterpriseAgent:
     def __init__(self, llm, max_rounds: int = 8, max_calls: int = 18):
         self.llm, self.max_rounds, self.max_calls = llm, max_rounds, max_calls
@@ -110,16 +123,8 @@ class EnterpriseAgent:
 
         handlers = {"read_task": read_task, "read_policy": read_policy, "create_request": create_request,
                     "load_skill": load_skill, "finish_task": finish_task}
-        tools = [function("read_task", "读取员工材料和本任务已有申请。", {}, []),
-                 function("read_policy", "读取当前业务的有效制度与申请类型；按条件判断应办理什么。", {}, []),
-                 function("create_request", "在本地模拟系统创建申请，按类型路由部门；不授权、不付款。", {"kind": {"type": "string"}}, ["kind"]),
-                 function("load_skill", "按需加载一条授权策略。", {"skill_id": {"type": "string"}}, ["skill_id"]),
-                 function("finish_task", "提交办理状态。", {
-                     "status": {"type": "string", "enum": ["completed", "waiting_approval", "needs_information", "blocked"]},
-                     "missing_information": {"type": "array", "items": {"type": "string"}},
-                     "explanation": {"type": "string"}}, ["status", "missing_information", "explanation"])]
         handlers["list_materials"] = list_materials
-        tools.append(function("list_materials", "读取材料分页。cursor省略表示第一页，按next_cursor续查至null才完整；接口错误表示未知。", {"cursor": {"type": ["string", "null"]}}, []))
+        tools = builtin_tools()
         if tool_recipes:
             from app.enterprise.tool_builder import register_recipe
             for recipe in tool_recipes:
