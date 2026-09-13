@@ -1,6 +1,7 @@
 """Offline protocol/lifecycle verification, not claims of real-model improvement."""
 import copy
 import json
+import re
 import sys
 
 import httpx
@@ -10,13 +11,20 @@ from app.config import Settings
 from app.enterprise.assessment import judge_pair, summarize, execute
 from app.enterprise.agent import builtin_tools
 from app.enterprise.evolution import (active, advance, expire_trials, lifecycle_commit, observe_episode,
-                                      observed_tasks, partition, propose, run_cycle, select_catalog)
+                                      observed_tasks, partition, proposal_context, build_proposal, run_cycle, select_catalog)
 from app.enterprise.examples import examples
 from app.enterprise.identity import digest
 from app.enterprise.runtime import build_runtime
 from app.enterprise.service import EnterpriseService
 from app.enterprise.store import EnterpriseStore
 from app.support.evolution import now
+
+
+async def propose(model, cycle, count):
+    # Exercise proposal validation directly; service cycles use the native-tool author.
+    payload = proposal_context(cycle, count)
+    response = await model.complete_json([{"role": "user", "content": json.dumps(payload)}])
+    return build_proposal(response, cycle, count, model.model)
 
 
 def settings(tmp_path):
@@ -43,6 +51,8 @@ class Model:
         self.judge_unknown = False
         self.judge_bad_path = False
         self.degrade = False
+        self.revise_after_feedback = False
+        self.author_messages = []
 
     async def embed(self, texts, model):
         return [[1.0, 0.0] for _ in texts]
@@ -79,6 +89,32 @@ class Model:
         raise AssertionError(data.keys())
 
     async def tool_turn(self, messages, tools):
+        if any(t["function"]["name"] == "submit_proposal" for t in tools):
+            self.author_messages.append(copy.deepcopy(messages))
+            initial = json.loads(messages[1]["content"])
+            calls = [c for m in messages if m["role"] == "assistant" for c in m.get("tool_calls", [])]
+            tool_results = {m["tool_call_id"]: json.loads(m["content"]) for m in messages if m["role"] == "tool"}
+            feedback_index = next((i for i in range(len(messages)-1, 1, -1) if messages[i]["role"] == "user"), None)
+            if not calls:
+                actions = [("list_capabilities", {})] + [("read_discovery_task", {"task_id": t["id"]}) for t in initial["discovery"][:2]]
+                actions += [("read_capability", {"capability_id": c["id"]}) for c in initial["capability_catalog"][:2]]
+                actions += [("read_builtin_tool", {"name": "read_policy"})]
+            elif feedback_index is not None and not self.revise_after_feedback:
+                actions = [("stop_review", {"reason": "没有可靠的进一步改进"})]
+            elif feedback_index is not None and not any(m["role"] == "tool" for m in messages[feedback_index+1:]):
+                actions = [("read_validation", {})]
+            elif feedback_index is not None and "cases" in json.loads(messages[-1]["content"]):
+                actions = [("read_validation", {"task_id": json.loads(messages[-1]["content"])["cases"][0]["task_id"]})]
+            else:
+                discovery = [tool_results[c["id"]] for c in calls if c["function"]["name"] == "read_discovery_task"]
+                existing = [tool_results[c["id"]] for c in calls if c["function"]["name"] == "read_capability"]
+                payload = {"discovery": discovery, "current_capabilities": existing, "builtin_tools": builtin_tools(), "case_count": initial["case_count"]}
+                response = await self.complete_json([{"role": "user", "content": json.dumps(payload)}])
+                if feedback_index is not None:
+                    response["evaluation"] = json.loads(messages[feedback_index]["content"])["frozen_evaluation"]
+                actions = [("submit_proposal", response)]
+            output = [{"id": f"author-{len(calls)+i}", "type": "function", "function": {"name": name, "arguments": json.dumps(args)}} for i, (name,args) in enumerate(actions)]
+            return {"message": {"role": "assistant", "content": None, "tool_calls": output}, "finish_reason": "tool_calls", "usage": {}}
         self.calls += 1
         payload = json.loads(messages[1]["content"])
         previous = [c for m in messages if m["role"] == "assistant" for c in m.get("tool_calls", [])]
@@ -545,3 +581,138 @@ async def test_resume_cannot_skip_persisted_failed_gate(tmp_path):
     store.put("evolution_cycle", cycle)
     result = await run_cycle(store, model, model, config, retry_id=cycle["id"])
     assert result["status"] == "rejected" and "holdout" not in result
+
+
+@pytest.mark.asyncio
+async def test_author_revises_after_validation_without_seeing_holdout(tmp_path):
+    class RevisingModel(Model):
+        async def complete_json(self, messages, **kwargs):
+            result = await super().complete_json(messages, **kwargs)
+            if "change" in result:
+                attempts = sum("discovery" in p for p in self.payloads)
+                result["change"]["skill"]["instructions"] = "尚未修正" if attempts == 1 else "repair：根据验证反馈修订"
+                result["change"]["selection"] = "核对费用材料"
+            return result
+
+    model = RevisingModel()
+    model.revise_after_feedback = True
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    config = settings(tmp_path)
+    await histories(store, model)
+    cycle = await run_cycle(store, model, Model(), config)
+    assert cycle["status"] == "canary"
+    assert len(cycle["attempts"]) == 2
+    first, second = cycle["attempts"]
+    assert not first["validation"]["passed"] and second["validation"]["passed"]
+    assert first["candidate_id"] != second["candidate_id"]
+    messages = cycle["authoring"]["messages"]
+    calls = [c for m in messages if m["role"] == "assistant" for c in m.get("tool_calls", [])]
+    assert any(c["function"]["name"] == "read_validation" and json.loads(c["function"]["arguments"]).get("task_id") for c in calls)
+    assert {c["id"] for c in calls} == {m["tool_call_id"] for m in messages if m["role"] == "tool"}
+    hidden = {t["id"] for t in cycle["partitions"]["holdout"]}
+    assert not any(re.search(re.escape(task_id) + r"(?![a-zA-Z0-9_-])", json.dumps(messages)) for task_id in hidden)
+    pairs = store.records("evolution_pair", 10000)
+    assert {p["proposal_digest"] for p in pairs if p["stage"] == "holdout"} == {second["proposal_digest"]}
+    for task_row in cycle["partitions"]["validation"]:
+        versions = [p for p in pairs if p["stage"] == "validation" and p["task_id"] == task_row["id"]]
+        assert len(versions) == 2
+        assert versions[0]["baseline_run"] == versions[1]["baseline_run"]
+
+
+@pytest.mark.asyncio
+async def test_candidate_budget_stops_repeated_unhelpful_revisions(tmp_path):
+    class NoGainModel(Model):
+        async def complete_json(self, messages, **kwargs):
+            response = await super().complete_json(messages, **kwargs)
+            if "change" in response:
+                response["change"]["skill"]["instructions"] += str(sum("discovery" in p for p in self.payloads))
+            return response
+    model = NoGainModel(default_good=True)
+    model.revise_after_feedback = True
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    config = settings(tmp_path)
+    config.evolution_max_candidates = 2
+    await histories(store, model)
+    cycle = await run_cycle(store, model, Model(), config)
+    assert cycle["status"] == "rejected"
+    assert len(cycle["attempts"]) == 2 and "holdout" not in cycle
+    assert not active(store, "expense")
+
+
+@pytest.mark.asyncio
+async def test_holdout_failure_is_terminal_and_not_sent_to_author(tmp_path):
+    model = Model()
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    await histories(store, model)
+    held = {t["id"] for t in partition(observed_tasks(store))["holdout"]}
+    class HoldoutJudge(Model):
+        async def complete_json(self, messages, **kwargs):
+            result = await super().complete_json(messages, **kwargs)
+            if json.loads(messages[-1]["content"])["task"]["id"] in held:
+                for grade in result.values():
+                    grade["passed"] = False
+            return result
+    cycle = await run_cycle(store, model, HoldoutJudge(), settings(tmp_path))
+    assert cycle["status"] == "rejected" and cycle["rejection_stage"] == "holdout"
+    assert len(cycle["attempts"]) == 1
+    assert not any(re.search(re.escape(task_id) + r"(?![a-zA-Z0-9_-])", json.dumps(cycle["authoring"]["messages"])) for task_id in held)
+
+
+@pytest.mark.asyncio
+async def test_revision_cannot_replace_frozen_evaluation():
+    cycle = {"id": "freeze", "domain": "expense", "before": [],
+             "partitions": {"discovery": [task("d1"), task("d2")]}, "discovery_feedback": []}
+    original = await propose(Model(), cycle, 2)
+    cycle["plan"] = original["plan"]
+    class EasierCriteria(Model):
+        async def complete_json(self, messages, **kwargs):
+            result = await super().complete_json(messages, **kwargs)
+            result["evaluation"]["criteria"] = ["只看文字是否流畅", "不核对真实申请"]
+            return result
+    with pytest.raises(ValueError, match="已冻结"):
+        await propose(EasierCriteria(), cycle, 2)
+
+
+@pytest.mark.asyncio
+async def test_author_cannot_read_holdout_and_stops_at_round_budget(tmp_path):
+    from app.enterprise.authoring import author_proposal
+    class CuriousModel:
+        model = "curious-double"
+        async def tool_turn(self, messages, tools):
+            return {"message": {"role": "assistant", "content": None, "tool_calls": [
+                {"id": "outside", "type": "function", "function": {"name": "read_discovery_task", "arguments": '{"task_id":"secret"}'}}]},
+                "finish_reason": "tool_calls"}
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    config = settings(tmp_path)
+    config.evolution_author_rounds = 1
+    hidden = task("secret")
+    hidden["input"]["question"] = "HOLDOUT_CONTENT_MUST_STAY_HIDDEN"
+    cycle = {"id": "bounded", "domain": "expense", "before": [],
+             "partitions": {"discovery": [task("d1"), task("d2")], "holdout": [hidden]}, "discovery_feedback": []}
+    result = await author_proposal(CuriousModel(), store, cycle, config)
+    assert "预算耗尽" in result["stop_reason"]
+    assert "只能读取发现" in cycle["authoring"]["messages"][-1]["content"]
+    assert "HOLDOUT_CONTENT_MUST_STAY_HIDDEN" not in json.dumps(cycle["authoring"]["messages"])
+
+
+@pytest.mark.asyncio
+async def test_author_transport_failure_resumes_after_completed_reads(tmp_path):
+    class InterruptedAuthor(Model):
+        fail_author = True
+        async def tool_turn(self, messages, tools):
+            if any(t["function"]["name"] == "submit_proposal" for t in tools) and len(messages) > 2 and self.fail_author:
+                raise ValueError("author unavailable")
+            return await super().tool_turn(messages, tools)
+    model = InterruptedAuthor()
+    store = EnterpriseStore(tmp_path / "state.sqlite")
+    config = settings(tmp_path)
+    await histories(store, model)
+    with pytest.raises(ValueError, match="author unavailable"):
+        await run_cycle(store, model, Model(), config)
+    failed = store.records("evolution_cycle")[0]
+    prefix = copy.deepcopy(failed["authoring"]["messages"])
+    model.fail_author = False
+    cycle = await run_cycle(store, model, Model(), config, retry_id=failed["id"])
+    assert cycle["status"] == "canary"
+    assert cycle["authoring"]["messages"][:len(prefix)] == prefix
+    assert cycle["authoring"]["rounds"] == 2

@@ -83,7 +83,7 @@ Skill只总结可复用条件与操作，不写员工名或任务答案。工具
 一次输出change和evaluation：change为变更，evaluation为评判标准与补充案例。
 no_change或maintenance时evaluation为null；其余操作必须提供指定数量的补充案例。
 评判标准必须来自用户要求和有效政策，不能以是否遵循候选为标准；同时覆盖原本正确的行为。
-输出符合schema，未用字段为null。不要为了进化而新增能力。""" + "\n" + PLAN_PROMPT
+使用工具按需查看现有能力和任务，使用submit_proposal提交符合schema的提案。不要为了进化而新增能力。""" + "\n" + PLAN_PROMPT
 
 
 def active(store, domain: str) -> list[dict]:
@@ -131,7 +131,7 @@ def observed_tasks(store) -> list[dict]:
     return list(latest.values())[:500]
 
 
-async def propose(llm, cycle: dict, case_count: int) -> dict:
+def proposal_context(cycle: dict, case_count: int) -> dict:
     records = []
     signals = {f["task_id"] for f in cycle["discovery_feedback"] if f["signal"] == "possible_error"}
     discovery = cycle["partitions"]["discovery"]
@@ -141,14 +141,17 @@ async def propose(llm, cycle: dict, case_count: int) -> dict:
         for key in ("tool_failure", "material_api_failure", "material_page_size"):
             row["input"]["environment"].pop(key, None)
         records.append(row)
-    data = await llm.complete_json([
-        {"role": "system", "content": REFLECT},
-        {"role": "user", "content": json.dumps({"discovery": records, "feedback": [f for f in cycle["discovery_feedback"] if f["task_id"] in {t["id"] for t in selected}],
-         "current_capabilities": cycle["before"], "builtin_tools": builtin_tools(), "case_count": case_count, "schema": Proposal.model_json_schema()}, ensure_ascii=False)},
-    ])
+    return {"discovery": records, "feedback": [f for f in cycle["discovery_feedback"] if f["task_id"] in {t["id"] for t in selected}],
+            "current_capabilities": cycle["before"], "builtin_tools": builtin_tools(), "case_count": case_count}
+
+
+def build_proposal(data: dict, cycle: dict, case_count: int, model: str) -> dict:
+    records = proposal_context(cycle, case_count)["discovery"]
     proposal = Proposal.model_validate(data)
     change = proposal.change
-    plan = prepare_plan(proposal.evaluation, records, case_count, llm.model) if proposal.evaluation else None
+    plan = prepare_plan(proposal.evaluation, records, case_count, model) if proposal.evaluation else None
+    if plan and cycle.get("plan") and plan["digest"] != cycle["plan"]["digest"]:
+        raise ValueError("评测计划已冻结；修订候选不能更换标准或补充题")
     if not set(change.evidence_ids) <= {t["id"] for t in records}:
         raise ValueError("复盘引用了发现分区以外的任务")
     if change.action not in {"no_change", "maintenance"} and len(set(change.evidence_ids)) < 2:
@@ -172,14 +175,17 @@ async def propose(llm, cycle: dict, case_count: int) -> dict:
         if any(r["kind"] == change.kind and r["body"][content_key] == content for r in before.values()):
             raise ValueError("已有相同正文或组合步骤的能力，请复用或调整选择说明，不能换名新增")
     result = change.model_dump()
+    change_fields = ("action", "target_id", "kind", "selection", "skill", "tool")
+    if any(all(a["change"][k] == result[k] for k in change_fields) for a in cycle.get("attempts", [])):
+        raise ValueError("该候选已经验证过，请根据反馈修改或停止")
     after = copy.deepcopy(cycle["before"])
     if change.action in {"no_change", "maintenance"}:
-        return {"change": result, "after": after, "candidate_id": None, "plan": None,
+        return {"change": result, "after": after, "candidate_id": None, "plan": cycle.get("plan"),
                 "reuse_assessment": proposal.reuse_assessment.model_dump()}
     after = [r for r in after if r["id"] != change.target_id]
     candidate_id = None
     if change.action != "retire":
-        candidate_id = f"cap-{cycle['id'][:20]}"
+        candidate_id = f"cap-{cycle['id'][:20]}-{len(cycle.get('attempts', []))+1}"
         candidate_body = body.model_dump() if body else copy.deepcopy(target["body"])
         candidate = {"id": candidate_id, "kind": change.kind, "domain": cycle["domain"], "body": candidate_body,
                      "selection": change.selection, "version": target["version"]+1 if target else 1,
@@ -205,14 +211,17 @@ def was_used(cycle: dict, run: dict) -> bool:
 
 
 async def pair(store, llm, judge, cycle: dict, task: dict, stage: str, *, actual: dict | None = None, cohort: str | None = None) -> dict:
-    key = digest([cycle["id"], stage, task["id"]])
+    key = digest([cycle["id"], cycle["proposal_digest"], stage, task["id"]])
     previous = store.get("evolution_pair", key)
     if previous and previous.get("status") == "completed":
         return previous
     row = previous or {"id": key, "cycle_id": cycle["id"], "stage": stage, "task_id": task["id"],
-        "origin": task.get("origin", "held_out_history"), "cohort": cohort, "created_at": now(), "status": "running"}
+        "proposal_digest": cycle["proposal_digest"], "origin": task.get("origin", "held_out_history"), "cohort": cohort, "created_at": now(), "status": "running"}
     if "baseline_run" not in row:
-        row["baseline_run"] = actual if cohort == "control" else await execute(llm, task, cycle["before"])
+        prior = next((p for p in store.records("evolution_pair", 10000)
+                      if stage == "validation" and p["cycle_id"] == cycle["id"] and p["stage"] == stage
+                      and p["task_id"] == task["id"] and "baseline_run" in p), None)
+        row["baseline_run"] = copy.deepcopy(prior["baseline_run"]) if prior else (actual if cohort == "control" else await execute(llm, task, cycle["before"]))
         store.put("evolution_pair", row)
     if "candidate_run" not in row:
         row["candidate_run"] = actual if cohort == "treatment" else await execute(llm, task, cycle["after"])
@@ -256,48 +265,78 @@ def lifecycle_commit(store, cycle_id: str, decision: str):
     return cycle
 
 
+async def evaluate_stage(store, llm, judge, settings, cycle: dict, stage: str) -> dict:
+    transition(store, cycle, stage)
+    cases = cycle["partitions"][stage]
+    if stage == "validation":
+        cases = cases + cycle["plan"]["cases"]
+    rows = []
+    for task in cases:
+        rows.append(await pair(store, llm, judge, cycle, task, stage))
+        cycle["progress"] = {"stage": stage, "completed": len(rows), "total": len(cases)}
+        store.put("evolution_cycle", cycle)
+    history_rows = [r for r in rows if r["origin"] != "model_generated"]
+    gate = summarize(history_rows, settings.evolution_min_pairs, require_use=cycle["change"]["action"] != "retire")
+    generated = [r for r in rows if r["origin"] == "model_generated"]
+    generated_gate = summarize(generated, len(generated)) if generated else None
+    if generated and (generated_gate["unknown"] or generated_gate["regressions"] > generated_gate["fixes"]):
+        gate["passed"] = False
+        gate["reasons"].append("generated_challenges_degraded_or_unknown")
+    return {**gate, "generated": generated_gate}
+
+
 async def advance(store, llm, judge, settings, cycle: dict) -> dict:
+    from app.enterprise.authoring import author_proposal
     try:
         if cycle["models"] != {"executor": llm.model, "judge": judge.model}:
             raise ValueError("周期模型配置已变化，不能混用不同模型的评测结果")
-        if "change" not in cycle:
-            transition(store, cycle, "reflecting")
-            cycle.update(await propose(llm, cycle, settings.evolution_generated_cases))
-            cycle["evaluation_digest"] = digest({"plan": cycle["plan"], "partitions": cycle["partitions"], "baseline": cycle["before"]})
-            cycle["proposal_digest"] = digest({"change": cycle["change"], "after": cycle["after"]})
-            frozen_at = now()
-            transition(store, cycle, "proposed", proposed_at=frozen_at, frozen_at=frozen_at)
-        if cycle["change"]["action"] in {"no_change", "maintenance"}:
-            transition(store, cycle, cycle["change"]["action"])
-            return cycle
-        for stage in ("validation", "holdout"):
-            if stage in cycle:
-                if not cycle[stage]["passed"]:
-                    transition(store, cycle, "rejected", rejection_stage=stage)
+        while not cycle.get("validation", {}).get("passed"):
+            if "change" not in cycle:
+                transition(store, cycle, "reflecting")
+                proposal = await author_proposal(llm, store, cycle, settings)
+                if "stop_reason" in proposal:
+                    if cycle.get("attempts"):
+                        cycle.update(copy.deepcopy(cycle["attempts"][-1]))
+                        transition(store, cycle, "rejected", rejection_stage="validation", stop_reason=proposal["stop_reason"])
+                    else:
+                        transition(store, cycle, "no_change", stop_reason=proposal["stop_reason"])
                     return cycle
-                continue
-            transition(store, cycle, stage)
-            cases = cycle["partitions"][stage]
-            if stage == "validation":
-                cases = cases + cycle["plan"]["cases"]
-            rows = []
-            for task in cases:
-                rows.append(await pair(store, llm, judge, cycle, task, stage))
-                cycle["progress"] = {"stage": stage, "completed": len(rows), "total": len(cases)}
-                store.put("evolution_cycle", cycle)
-            history_rows = [r for r in rows if r["origin"] != "model_generated"]
-            gate = summarize(history_rows, settings.evolution_min_pairs, require_use=cycle["change"]["action"] != "retire")
-            generated = [r for r in rows if r["origin"] == "model_generated"]
-            generated_gate = summarize(generated, len(generated)) if generated else None
-            # Generated challenges cannot compensate for lack of benefit on held-out history.
-            if generated and (generated_gate["unknown"] or generated_gate["regressions"] > generated_gate["fixes"]):
-                gate["passed"] = False
-                gate["reasons"].append("generated_challenges_degraded_or_unknown")
-            cycle[stage] = {**gate, "generated": generated_gate}
-            store.put("evolution_cycle", cycle)
-            if not gate["passed"]:
-                transition(store, cycle, "rejected", rejection_stage=stage)
+                cycle.update(proposal)
+                cycle["evaluation_digest"] = digest({"plan": cycle["plan"], "partitions": cycle["partitions"], "baseline": cycle["before"]})
+                cycle["proposal_digest"] = digest({"change": cycle["change"], "after": cycle["after"]})
+                frozen_at = cycle.get("frozen_at", now())
+                transition(store, cycle, "proposed", proposed_at=now(), frozen_at=frozen_at)
+            if cycle["change"]["action"] in {"no_change", "maintenance"}:
+                transition(store, cycle, cycle["change"]["action"])
                 return cycle
+            if "validation" not in cycle:
+                cycle["validation"] = await evaluate_stage(store, llm, judge, settings, cycle, "validation")
+                store.put("evolution_cycle", cycle)
+            if not any(a["proposal_digest"] == cycle["proposal_digest"] for a in cycle.get("attempts", [])):
+                cycle.setdefault("attempts", []).append({k: copy.deepcopy(cycle[k]) for k in
+                    ("proposal_digest", "change", "after", "candidate_id", "reuse_assessment", "validation")})
+                store.put("evolution_cycle", cycle)
+            if cycle["validation"]["passed"]:
+                break
+            if (len(cycle["attempts"]) >= settings.evolution_max_candidates
+                    or "insufficient_judged_samples" in cycle["validation"]["reasons"]):
+                transition(store, cycle, "rejected", rejection_stage="validation")
+                return cycle
+            state = cycle["authoring"]
+            state.pop("result", None)
+            state["messages"].append({"role": "user", "content": json.dumps({
+                "validation_feedback": cycle["validation"], "candidate": cycle["change"],
+                "frozen_evaluation": state["evaluation"],
+                "instruction": "可用read_validation查看逐条轨迹与评审。修订后重新submit_proposal，或stop_review。不能改评测标准。"}, ensure_ascii=False)})
+            cycle.pop("change")
+            cycle.pop("validation")
+            transition(store, cycle, "reflecting")
+        if "holdout" not in cycle:
+            cycle["holdout"] = await evaluate_stage(store, llm, judge, settings, cycle, "holdout")
+            store.put("evolution_cycle", cycle)
+        if not cycle["holdout"]["passed"]:
+            transition(store, cycle, "rejected", rejection_stage="holdout")
+            return cycle
         if [(r["id"], r["digest"]) for r in active(store, cycle["domain"])] != [(r["id"], r["digest"]) for r in cycle["before"]]:
             transition(store, cycle, "superseded")
         else:

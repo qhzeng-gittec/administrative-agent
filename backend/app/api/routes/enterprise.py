@@ -108,7 +108,7 @@ async def jobs(request: Request, user=Depends(require_user)):
 @router.get("/evolution", response_model=ApiResponse)
 async def evolution(request: Request, user=Depends(global_admin)):
     svc = service(request)
-    cycles = [{k: v for k, v in c.items() if k not in {"partitions", "discovery_feedback"}} | {
+    cycles = [{k: v for k, v in c.items() if k not in {"partitions", "discovery_feedback", "authoring"}} | {
         "partition_counts": {name: len(rows) for name, rows in c["partitions"].items()}}
         for c in svc.store.records("evolution_cycle", 30)]
     return ApiResponse(data={"source": "internal_evolution", "cycles": cycles,

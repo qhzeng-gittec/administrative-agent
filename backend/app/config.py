@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     mining_cluster_eps: float = 0.20
     evolution_judge_model: str = "deepseek/deepseek-v3.2"
     evolution_generated_cases: int = Field(default=4, ge=1, le=8)
+    evolution_max_candidates: int = Field(default=3, ge=1, le=8)
+    evolution_author_rounds: int = Field(default=16, ge=1, le=64)
     evolution_min_pairs: int = Field(default=4, ge=1)
     evolution_trial_samples: int = Field(default=20, ge=2)
     evolution_trial_days: int = Field(default=14, ge=1)
